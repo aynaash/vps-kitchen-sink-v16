@@ -182,12 +182,14 @@ export default async function MonitorDetailPage({ params }: MonitorDetailPagePro
               <TableBody>
                 {logs.map((log) => (
                   <TableRow key={log.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">
-                      {new Date(log.created_at).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                      })}
+                    <TableCell className="font-mono text-xs text-muted-foreground" suppressHydrationWarning>
+                      <span suppressHydrationWarning>
+                        {new Date(log.created_at).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                        })}
+                      </span>
                     </TableCell>
 
                     <TableCell>

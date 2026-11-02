@@ -75,9 +75,9 @@ export default async function ProjectDetailPage({ params }: ProjectDetailPagePro
               </CardDescription>
             </div>
 
-            <div className="text-xs text-muted-foreground flex items-center gap-1.5 font-mono">
+            <div className="text-xs text-muted-foreground flex items-center gap-1.5 font-mono" suppressHydrationWarning>
               <Clock className="size-3.5" />
-              {new Date(project.updated_at).toLocaleString()}
+              <span suppressHydrationWarning>{new Date(project.updated_at).toLocaleString()}</span>
             </div>
           </div>
         </CardHeader>

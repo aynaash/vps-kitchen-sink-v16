@@ -325,14 +325,16 @@ export function MonitorManager({ initialMonitors }: MonitorManagerProps) {
                         {m.uptime_percentage}%
                       </TableCell>
 
-                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground font-mono">
-                        {m.last_checked_at
-                          ? new Date(m.last_checked_at).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                            })
-                          : 'Pending'}
+                      <TableCell className="hidden md:table-cell text-xs text-muted-foreground font-mono" suppressHydrationWarning>
+                        <span suppressHydrationWarning>
+                          {m.last_checked_at
+                            ? new Date(m.last_checked_at).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                              })
+                            : 'Pending'}
+                        </span>
                       </TableCell>
 
                       <TableCell className="text-right">
