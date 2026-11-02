@@ -1,0 +1,21 @@
+name: vps-kitchen-sink-v16
+target: vps
+vps:
+  host: "YOUR_SERVER_IP"
+  user: "deploy"
+  port: 22
+web:
+  domain: "v16.yourdomain.com"
+  waf:
+    enabled: true
+    mode: "enforce" # Coraza OWASP CRS inspection
+  tls: "auto"
+storage:
+  volumes:
+    - host: "/var/lib/nextdeploy/vps-v16/data"
+      container: "/data"
+healthcheck:
+  path: "/api/health"
+  interval_seconds: 3
+  timeout_seconds: 5
+  retries: 3
