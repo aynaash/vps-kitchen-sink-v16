@@ -4,23 +4,24 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
   ShieldCheck, 
-  Database, 
   Activity, 
   FolderKanban, 
   HeartPulse, 
   Server, 
-  Cpu, 
+  Terminal,
   Menu, 
   X,
-  Radio
+  ExternalLink
 } from 'lucide-react';
 import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 const NAV_ITEMS = [
   { href: '/', label: 'Overview', icon: Server },
   { href: '/projects', label: 'Projects & Actions', icon: FolderKanban },
-  { href: '/telemetry', label: 'Live Telemetry SSE', icon: Activity },
-  { href: '/waf-verification', label: 'Coraza WAF Verification', icon: ShieldCheck },
+  { href: '/telemetry', label: 'Live Telemetry', icon: Activity },
+  { href: '/waf-verification', label: 'Coraza WAF', icon: ShieldCheck },
   { href: '/api/health', label: 'Health API', icon: HeartPulse, external: true },
 ];
 
@@ -29,23 +30,22 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo & Stack Badge */}
-          <div className="flex items-center space-x-3">
-            <Link href="/" className="flex items-center space-x-3 group">
-              <div className="p-2 rounded-xl bg-gradient-to-tr from-cyan-500/20 via-sky-500/20 to-blue-600/30 border border-cyan-500/30 text-cyan-400 group-hover:border-cyan-400 transition-colors">
-                <Cpu className="w-5 h-5 text-cyan-400" />
+        <div className="flex items-center justify-between h-14">
+          {/* Logo & Product Name */}
+          <div className="flex items-center space-x-4">
+            <Link href="/" className="flex items-center space-x-2.5">
+              <div className="size-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-mono font-bold text-xs shadow-sm">
+                v16
               </div>
-              <div>
-                <span className="font-bold text-lg tracking-tight text-white flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-sm tracking-tight text-foreground">
                   VPS Kitchen Sink
-                  <span className="text-[10px] uppercase font-mono tracking-wider px-1.5 py-0.5 rounded bg-cyan-950 border border-cyan-700/50 text-cyan-400">
-                    v16
-                  </span>
                 </span>
-                <span className="block text-[11px] text-slate-400">NextDeploy Stress Harness</span>
+                <Badge variant="outline" className="text-[10px] font-mono py-0 h-4 border-border font-normal text-muted-foreground">
+                  Next.js 16
+                </Badge>
               </div>
             </Link>
           </div>
@@ -60,50 +60,52 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   target={item.external ? '_blank' : undefined}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     isActive
-                      ? 'bg-slate-800 text-cyan-400 border border-slate-700 shadow-sm'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-900/80'
+                      ? 'bg-secondary text-foreground'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
+                  <Icon className="size-3.5" />
                   <span>{item.label}</span>
                   {item.external && (
-                    <span className="text-[10px] text-slate-500">↗</span>
+                    <ExternalLink className="size-2.5 text-muted-foreground ml-0.5" />
                   )}
                 </Link>
               );
             })}
           </nav>
 
-          {/* VPS & WAF Badges */}
+          {/* Status Badges */}
           <div className="hidden lg:flex items-center space-x-2">
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 text-xs font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>WAL /data/app.db</span>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border text-[11px] font-mono text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>SQLite WAL</span>
             </div>
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-indigo-950/60 border border-indigo-800/60 text-indigo-300 text-xs font-mono">
-              <ShieldCheck className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Coraza CRS: Enforce</span>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-border text-[11px] font-mono text-muted-foreground">
+              <span className="size-1.5 rounded-full bg-blue-500"></span>
+              <span>Coraza WAF</span>
             </div>
           </div>
 
           {/* Mobile Menu Button */}
           <div className="flex md:hidden">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none"
-              aria-label="Toggle navigation menu"
+              className="size-8"
+              aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+              {mobileMenuOpen ? <X className="size-4" /> : <Menu className="size-4" />}
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-slate-800 bg-slate-950 px-4 pt-2 pb-4 space-y-2">
+        <div className="md:hidden border-b border-border bg-background px-4 py-3 space-y-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -112,13 +114,13 @@ export function Navbar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium ${
                   isActive
-                    ? 'bg-slate-800 text-cyan-400 font-semibold'
-                    : 'text-slate-300 hover:text-white hover:bg-slate-900'
+                    ? 'bg-secondary text-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="size-4" />
                 <span>{item.label}</span>
               </Link>
             );

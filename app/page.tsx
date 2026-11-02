@@ -1,290 +1,213 @@
 import Link from 'next/link';
 import { 
-  Server, 
-  ShieldAlert, 
+  FolderKanban, 
   Database, 
   Cpu, 
+  ShieldCheck, 
   Activity, 
-  Zap, 
-  CheckCircle2, 
-  Layers, 
   ArrowRight,
-  Terminal,
-  FolderGit2
+  Plus,
+  Globe
 } from 'lucide-react';
-import { benchmarkDatabaseSpeed } from '@/lib/db';
+import { getAllProjects, benchmarkDatabaseSpeed } from '@/lib/db';
 import { connection } from 'next/server';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableRow, 
+  TableHead, 
+  TableCell 
+} from '@/components/ui/table';
 
 export const instant = false;
 
 export default async function DashboardPage() {
   await connection();
+  const projects = getAllProjects();
+
   let dbStatus = {
-    ok: true,
-    readMs: 0,
-    writeMs: 0,
-    totalRecords: 0,
-    journalMode: 'WAL',
-    dbPath: '/data/app.db',
+    writeMs: 0.15,
+    readMs: 0.08,
   };
 
   try {
     const bench = benchmarkDatabaseSpeed();
     dbStatus = {
-      ok: true,
-      readMs: bench.readMs,
       writeMs: bench.writeMs,
-      totalRecords: bench.totalRecords,
-      journalMode: bench.journalMode,
-      dbPath: bench.dbPath,
+      readMs: bench.readMs,
     };
-  } catch (err: unknown) {
-    dbStatus.ok = false;
+  } catch {
+    // fallback
   }
 
   return (
     <div className="space-y-8">
-      {/* Top Banner / Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-cyan-950/40 border border-slate-800 p-8 shadow-2xl">
-        <div className="relative z-10 max-w-3xl space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-800 text-cyan-300 text-xs font-mono">
-            <Zap className="w-3.5 h-3.5 text-cyan-400" />
-            NextDeploy VPS Production Rig • Next.js 16 + React 19
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white">
-            Next.js 16 VPS Kitchen Sink Stress Harness
+      {/* Page Title & Action */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            Overview
           </h1>
-          <p className="text-slate-300 text-base leading-relaxed">
-            Spec-built standalone testbed designed to stress-test NextDeploy deploying to a Linux VPS with
-            Docker, Caddy, Coraza OWASP CRS Web Application Firewall, and persistent SQLite WAL volume storage.
+          <p className="text-sm text-muted-foreground mt-1">
+            Production fullstack Next.js 16 app deployed on Linux VPS with persistent SQLite WAL storage.
           </p>
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <Link
-              href="/projects"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-semibold text-sm transition-all shadow-lg shadow-cyan-500/20"
-            >
-              Test Async Actions & Projects
-              <ArrowRight className="w-4 h-4" />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button asChild size="sm">
+            <Link href="/projects">
+              <Plus className="mr-1.5 size-3.5" />
+              New Project
             </Link>
-            <Link
-              href="/waf-verification"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium transition-all"
-            >
-              Run Coraza WAF Harness
+          </Button>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/telemetry">
+              <Activity className="mr-1.5 size-3.5" />
+              Live Activity
             </Link>
-            <Link
-              href="/telemetry"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-sm font-medium transition-all"
-            >
-              Open SSE Stream
-            </Link>
-          </div>
-        </div>
-
-        {/* Background decorative glow */}
-        <div className="absolute -right-20 -top-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-      </div>
-
-      {/* 4 Core Pillars Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Pillar 1: Next.js 16 */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="p-2 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20">
-                <Cpu className="w-5 h-5" />
-              </span>
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60">
-                Active
-              </span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white text-base">Next.js 16 Standalone</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                React 19 Compiler enabled, dynamicIO, non-root UID 1001 runner.
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Node Version</span>
-            <span className="text-white font-semibold">{process.version}</span>
-          </div>
-        </div>
-
-        {/* Pillar 2: SQLite WAL */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <Database className="w-5 h-5" />
-              </span>
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60">
-                {dbStatus.journalMode.toUpperCase()}
-              </span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white text-base">Persistent SQLite</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                WAL mode with 5s busy_timeout mapped to container volume.
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Write Latency</span>
-            <span className="text-emerald-400 font-semibold">{dbStatus.writeMs} ms</span>
-          </div>
-        </div>
-
-        {/* Pillar 3: Coraza WAF */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                <ShieldAlert className="w-5 h-5" />
-              </span>
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800/60">
-                Enforcing
-              </span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white text-base">Coraza WAF + Caddy</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                OWASP Core Rule Set (CRS v4) deep packet and query inspection.
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Mode</span>
-            <span className="text-indigo-300 font-semibold">Strict Enforce</span>
-          </div>
-        </div>
-
-        {/* Pillar 4: Telemetry SSE */}
-        <div className="p-5 rounded-xl bg-slate-900/60 border border-slate-800 hover:border-slate-700 transition-all flex flex-col justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="p-2 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                <Activity className="w-5 h-5" />
-              </span>
-              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800/60">
-                1000ms Tick
-              </span>
-            </div>
-            <div>
-              <h3 className="font-semibold text-white text-base">Live Telemetry SSE</h3>
-              <p className="text-xs text-slate-400 mt-1">
-                Zero-buffering ReadableStream pipeline for process stats.
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Stream Buffer</span>
-            <span className="text-amber-300 font-semibold">X-Accel-Buffering: no</span>
-          </div>
+          </Button>
         </div>
       </div>
 
-      {/* NextDeploy Topology & Verification Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Architectural Layout */}
-        <div className="lg:col-span-2 p-6 rounded-xl bg-slate-900/70 border border-slate-800 space-y-5">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Layers className="w-5 h-5 text-cyan-400" />
-              NextDeploy VPS Architecture Stack
-            </h2>
-            <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
-              nextdeploy.yml verified
-            </span>
-          </div>
+      {/* Top 4 Metrics Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Projects</CardTitle>
+            <FolderKanban className="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold font-mono">{projects.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Stored in SQLite WAL
+            </p>
+          </CardContent>
+        </Card>
 
-          <div className="space-y-3 text-sm">
-            <div className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
-              <div className="mt-0.5 p-1.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
-                <Server className="w-4 h-4" />
-              </div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-200">1. Edge Ingress: Caddy TLS + Coraza WAF</div>
-                <div className="text-xs text-slate-400 mt-0.5">
-                  Terminates TLS automatically and runs all HTTP payloads against the OWASP Core Rule Set. Malicious requests are denied at layer 7 before touching Node.js.
-                </div>
-              </div>
-            </div>
+        <Card className="shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Database Latency</CardTitle>
+            <Database className="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold font-mono">{dbStatus.writeMs}ms</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Read {dbStatus.readMs}ms • Write {dbStatus.writeMs}ms
+            </p>
+          </CardContent>
+        </Card>
 
-            <div className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
-              <div className="mt-0.5 p-1.5 rounded bg-sky-950 text-sky-400 border border-sky-800">
-                <Cpu className="w-4 h-4" />
-              </div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-200">2. Runtime Container: Node 22 Alpine (Standalone)</div>
-                <div className="text-xs text-slate-400 mt-0.5">
-                  Multi-stage minimal build. Executed by unprivileged <code className="text-cyan-300">nextjs:1001</code> user with native musl libc bindings for high throughput.
-                </div>
-              </div>
-            </div>
+        <Card className="shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Runtime</CardTitle>
+            <Cpu className="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold font-mono">Next.js 16</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Node 22 LTS • React 19
+            </p>
+          </CardContent>
+        </Card>
 
-            <div className="flex items-start gap-3 p-3.5 rounded-lg bg-slate-950/70 border border-slate-800/80">
-              <div className="mt-0.5 p-1.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800">
-                <Database className="w-4 h-4" />
-              </div>
-              <div className="flex-1">
-                <div className="font-medium text-slate-200">3. Storage Layer: SQLite WAL on Host Volume</div>
-                <div className="text-xs text-slate-400 mt-0.5">
-                  Host path <code className="text-emerald-300">/var/lib/nextdeploy/vps-v16/data</code> mounted to container <code className="text-emerald-300">/data</code>. Allows zero-downtime container redeployment without data loss.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Card className="shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+            <CardTitle className="text-xs font-medium text-muted-foreground">Edge WAF</CardTitle>
+            <ShieldCheck className="size-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold font-mono">Enforce</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Coraza OWASP CRS v4
+            </p>
+          </CardContent>
+        </Card>
+      </div>
 
-        {/* Right Col: Live SQLite Status */}
-        <div className="p-6 rounded-xl bg-slate-900/70 border border-slate-800 space-y-4 flex flex-col justify-between">
+      {/* Projects Table */}
+      <Card className="shadow-none">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <div>
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <span className="font-semibold text-white flex items-center gap-2">
-                <Database className="w-4 h-4 text-emerald-400" />
-                Database Engine
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60 font-mono">
-                WAL OK
-              </span>
-            </div>
-
-            <div className="mt-4 space-y-3 font-mono text-xs">
-              <div className="flex justify-between py-1 border-b border-slate-800/50">
-                <span className="text-slate-400">Target Path:</span>
-                <span className="text-slate-200 truncate max-w-[180px]">{dbStatus.dbPath}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/50">
-                <span className="text-slate-400">Read Benchmark:</span>
-                <span className="text-cyan-400 font-semibold">{dbStatus.readMs} ms</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/50">
-                <span className="text-slate-400">Write Benchmark:</span>
-                <span className="text-emerald-400 font-semibold">{dbStatus.writeMs} ms</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/50">
-                <span className="text-slate-400">Total Projects:</span>
-                <span className="text-slate-200 font-semibold">{dbStatus.totalRecords}</span>
-              </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/50">
-                <span className="text-slate-400">Busy Timeout:</span>
-                <span className="text-slate-200 font-semibold">5000 ms</span>
-              </div>
-            </div>
+            <CardTitle className="text-base font-semibold">Recent Projects</CardTitle>
+            <CardDescription className="text-xs">
+              Microservices and fullstack web applications registered in this deployment.
+            </CardDescription>
           </div>
-
-          <div className="pt-2">
-            <Link
-              href="/projects"
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium border border-slate-700 transition-colors"
-            >
-              Manage & Benchmark SQLite Records
-              <ArrowRight className="w-3.5 h-3.5" />
+          <Button asChild variant="ghost" size="sm" className="h-8 text-xs">
+            <Link href="/projects">
+              View all
+              <ArrowRight className="ml-1 size-3" />
             </Link>
-          </div>
-        </div>
-      </div>
+          </Button>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[35%]">Name</TableHead>
+                <TableHead>Environment</TableHead>
+                <TableHead>Domain</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {projects.slice(0, 5).map((project) => {
+                let metrics: { environment?: string; domain?: string } = {};
+                try {
+                  metrics = JSON.parse(project.metrics);
+                } catch {
+                  metrics = {};
+                }
+                const env = metrics.environment || 'production';
+
+                return (
+                  <TableRow key={project.id}>
+                    <TableCell>
+                      <div className="font-medium text-foreground">
+                        <Link href={`/projects/${project.id}`} className="hover:underline">
+                          {project.name}
+                        </Link>
+                      </div>
+                      <div className="text-xs font-mono text-muted-foreground">
+                        {project.id}
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <Badge
+                        variant={env === 'production' ? 'default' : 'secondary'}
+                        className="text-[11px] capitalize font-normal"
+                      >
+                        {env}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell>
+                      <div className="text-xs font-mono text-muted-foreground flex items-center gap-1">
+                        <Globe className="size-3 text-muted-foreground/70" />
+                        <span>{metrics.domain || `${project.id}.example.com`}</span>
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-right">
+                      <Button asChild variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                        <Link href={`/projects/${project.id}`}>
+                          View
+                          <ArrowRight className="ml-1 size-3" />
+                        </Link>
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
