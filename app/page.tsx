@@ -1,12 +1,12 @@
-import { getAllProjects } from '@/lib/db';
-import { ProjectManager } from '@/components/ProjectManager';
+import { getMonitors } from '@/lib/monitors';
+import { MonitorManager } from '@/components/MonitorManager';
 import { connection } from 'next/server';
 
 export const instant = false;
 
 export default async function HomePage() {
   await connection();
-  const projects = getAllProjects();
+  const monitors = await getMonitors();
 
-  return <ProjectManager initialProjects={projects} />;
+  return <MonitorManager initialMonitors={monitors} />;
 }

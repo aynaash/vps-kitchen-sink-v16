@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Activity, Database, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -13,24 +15,29 @@ export function Navbar() {
         {/* Brand */}
         <div className="flex items-center space-x-6">
           <Link href="/" className="flex items-center space-x-2.5">
-            <div className="size-7 rounded-md bg-foreground text-background flex items-center justify-center font-semibold text-xs">
-              KS
+            <div className="size-7 rounded-md bg-emerald-500 text-slate-950 flex items-center justify-center font-bold text-xs shadow-sm">
+              <Activity className="size-4 stroke-[2.5]" />
             </div>
-            <span className="font-semibold text-sm tracking-tight text-foreground">
-              Kitchen Sink
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm tracking-tight text-foreground">
+                PingPulse
+              </span>
+              <Badge variant="outline" className="text-[10px] font-mono py-0 h-4 border-emerald-500/30 text-emerald-500 font-normal">
+                PostgreSQL + Better Auth
+              </Badge>
+            </div>
           </Link>
 
           <nav className="flex items-center space-x-1">
             <Link
               href="/"
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                pathname === '/' || pathname.startsWith('/projects')
+                pathname === '/' || pathname.startsWith('/monitors')
                   ? 'bg-secondary text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              Projects
+              Monitors
             </Link>
             <Link
               href="/status"
@@ -49,8 +56,16 @@ export function Navbar() {
         <div className="flex items-center space-x-3">
           <div className="hidden sm:flex items-center space-x-1.5 text-xs text-muted-foreground font-mono">
             <span className="size-1.5 rounded-full bg-emerald-500"></span>
-            <span>SQLite WAL</span>
+            <span>Docker Postgres :5432</span>
           </div>
+
+          <Button asChild variant="outline" size="sm" className="h-8 text-xs font-mono">
+            <Link href="/auth/login">
+              <User className="mr-1.5 size-3 text-muted-foreground" />
+              <span className="hidden sm:inline">dev@pingpulse.io</span>
+              <span className="sm:hidden">Auth</span>
+            </Link>
+          </Button>
 
           <Button asChild variant="ghost" size="icon" className="size-8">
             <Link
