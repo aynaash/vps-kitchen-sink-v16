@@ -2,21 +2,18 @@ import Database from 'better-sqlite3';
 import fs from 'node:fs';
 import path from 'node:path';
 
+export interface ProjectData {
+  description?: string;
+  status: 'active' | 'in_progress' | 'completed';
+  category?: string;
+  [key: string]: unknown;
+}
+
 export interface Project {
   id: string;
   name: string;
-  metrics: string; // JSON encoded string: { domain?: string, environment?: string, status?: string, version?: string, memory_mb?: number, ... }
+  metrics: string; // JSON encoded ProjectData
   updated_at: number;
-}
-
-export interface ParsedProjectMetrics {
-  domain?: string;
-  environment?: 'production' | 'staging' | 'development';
-  status?: 'active' | 'deploying' | 'maintenance' | 'paused';
-  version?: string;
-  memory_mb?: number;
-  description?: string;
-  [key: string]: unknown;
 }
 
 function resolveDatabasePath(): string {
@@ -31,7 +28,7 @@ function resolveDatabasePath(): string {
       return path.join(containerDataDir, 'app.db');
     }
   } catch {
-    // Fall back to workspace directory
+    // fallback to local directory
   }
 
   const localDataDir = path.join(process.cwd(), 'data');
@@ -61,9 +58,8 @@ export function getDatabase(): Database.Database {
   db.pragma('journal_mode = WAL');
   db.pragma('busy_timeout = 5000');
   db.pragma('synchronous = NORMAL');
-  db.pragma('cache_size = -64000');
 
-  // Auto-migrate projects schema
+  // Auto-migrate schema
   db.exec(`
     CREATE TABLE IF NOT EXISTS projects (
       id TEXT PRIMARY KEY,
@@ -88,43 +84,34 @@ function seedInitialProjectsIfEmpty(db: Database.Database): void {
     return;
   }
 
-  const seedProjects: Array<{ id: string; name: string; metrics: ParsedProjectMetrics }> = [
+  const seed: Array<{ id: string; name: string; data: ProjectData }> = [
     {
-      id: 'web-portal',
+      id: 'customer-portal',
       name: 'Customer Web Portal',
-      metrics: {
-        domain: 'app.example.com',
-        environment: 'production',
+      data: {
+        description: 'Customer facing dashboard for billing and account management.',
         status: 'active',
-        version: 'v2.4.1',
-        memory_mb: 48.2,
-        description: 'Next.js 16 frontend app connected to backend services and user authentication.'
-      }
+        category: 'Frontend',
+      },
     },
     {
-      id: 'api-service',
-      name: 'Core REST & GraphQL API',
-      metrics: {
-        domain: 'api.example.com',
-        environment: 'production',
+      id: 'core-api',
+      name: 'Core REST API',
+      data: {
+        description: 'High-performance backend API handling authentication and data processing.',
         status: 'active',
-        version: 'v1.12.0',
-        memory_mb: 64.0,
-        description: 'Primary business logic and SQLite data persistence layer.'
-      }
+        category: 'Backend',
+      },
     },
     {
-      id: 'docs-site',
-      name: 'Developer Documentation',
-      metrics: {
-        domain: 'docs.example.com',
-        environment: 'staging',
-        status: 'active',
-        version: 'v1.0.4',
-        memory_mb: 32.5,
-        description: 'Public documentation and API specifications site.'
-      }
-    }
+      id: 'analytics-worker',
+      name: 'Analytics Worker',
+      data: {
+        description: 'Background cron job aggregating daily usage metrics and telemetry.',
+        status: 'in_progress',
+        category: 'Worker',
+      },
+    },
   ];
 
   const insert = db.prepare(`
@@ -134,12 +121,12 @@ function seedInitialProjectsIfEmpty(db: Database.Database): void {
 
   const tx = db.transaction(() => {
     const now = Date.now();
-    for (const p of seedProjects) {
+    for (const item of seed) {
       insert.run({
-        id: p.id,
-        name: p.name,
-        metrics: JSON.stringify(p.metrics),
-        updated_at: now
+        id: item.id,
+        name: item.name,
+        metrics: JSON.stringify(item.data),
+        updated_at: now,
       });
     }
   });
@@ -157,26 +144,47 @@ export function getProjectById(id: string): Project | undefined {
   return db.prepare('SELECT id, name, metrics, updated_at FROM projects WHERE id = ?').get(id) as Project | undefined;
 }
 
-export function createProject(data: { id: string; name: string; metrics?: ParsedProjectMetrics }): Project {
+export function createProject(params: { id: string; name: string; data: ProjectData }): Project {
   const db = getDatabase();
   const now = Date.now();
-  const metricsJson = JSON.stringify(data.metrics || {
-    status: 'active',
-    environment: 'production',
-    domain: `${data.id}.example.com`,
-  });
+  const metricsJson = JSON.stringify(params.data);
 
   db.prepare(`
     INSERT INTO projects (id, name, metrics, updated_at)
     VALUES (?, ?, ?, ?)
-  `).run(data.id, data.name, metricsJson, now);
+  `).run(params.id, params.name, metricsJson, now);
 
   return {
-    id: data.id,
-    name: data.name,
+    id: params.id,
+    name: params.name,
     metrics: metricsJson,
-    updated_at: now
+    updated_at: now,
   };
+}
+
+export function toggleProjectStatus(id: string): boolean {
+  const db = getDatabase();
+  const project = getProjectById(id);
+  if (!project) return false;
+
+  let data: ProjectData = { status: 'active' };
+  try {
+    data = JSON.parse(project.metrics);
+  } catch {
+    // ignore
+  }
+
+  const nextStatus: ProjectData['status'] =
+    data.status === 'completed' ? 'active' : 'completed';
+  data.status = nextStatus;
+
+  const result = db.prepare(`
+    UPDATE projects
+    SET metrics = ?, updated_at = ?
+    WHERE id = ?
+  `).run(JSON.stringify(data), Date.now(), id);
+
+  return result.changes > 0;
 }
 
 export function deleteProjectById(id: string): boolean {
@@ -195,12 +203,12 @@ export function benchmarkDatabaseSpeed(): {
   const db = getDatabase();
   const dbPath = globalForDb._dbPath || resolveDatabasePath();
 
-  const tempId = `bench_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const tempId = `bench_${Date.now()}`;
   const writeStart = performance.now();
   db.prepare(`
     INSERT INTO projects (id, name, metrics, updated_at)
     VALUES (?, ?, ?, ?)
-  `).run(tempId, 'Speed Benchmark Probe', JSON.stringify({ status: 'bench' }), Date.now());
+  `).run(tempId, 'Benchmark Temp', JSON.stringify({ status: 'active' }), Date.now());
   const writeMs = Number((performance.now() - writeStart).toFixed(3));
 
   const readStart = performance.now();
@@ -216,6 +224,6 @@ export function benchmarkDatabaseSpeed(): {
     writeMs,
     totalRecords: total - 1,
     journalMode: journalModeRow,
-    dbPath
+    dbPath,
   };
 }
